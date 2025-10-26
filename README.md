@@ -4,23 +4,6 @@ Changes made to work with my setup and ESP32-2432S028R
 
 
 
-
-# PowerDisplayESPHome
-
-### UPDATE: Updated to handle the change to 15 min pricing by NordPool. 
-**Note:** Code has been updated to support ESPHome 2025.9.3. It hasn't been tested on older versions.
-
-
-This is a small display that shows the current electricity consumption, together with a graph of the today's electricity price, using either NordPool or Tibber. The software pulls the data from a Home Assistant instance, so all sources must be available there.
-
-This is a port of the previous repo [PowerDisplayHomeAssistant](https://github.com/johannyren/PowerDisplayHomeAssistant) to ESPHome. The ESPHome version allows for much more flexibility and ease of setup than the previous version, and gets its time directly from Home Assistant rather than ntp. This simplifies handling of Daylight Savings Time etc. It also allows for more fonts, as it uses Google fonts that supports non-English characters, and can be easily replaced as desired.
-
-**Note:** The ESPHome version requires an ESP32 microcontroller, as the ESPHome ILI9341 library seems to require more memory than is available in a Wemos D1 mini.
-
-
-
-![alt text](https://github.com/johannyren/PowerDisplayESPHome/blob/main/images/Display1.jpg?raw=true)
-
 The hardware consists of an ESP32 and an ILI9341 display.
 
 ## Wiring of the ILI9341:
@@ -29,18 +12,15 @@ The hardware consists of an ESP32 and an ILI9341 display.
 ILI9341   -> ESP32
 VCC       -> 3.3V
 GND       -> GND
-CS        -> 13
-RESET     -> 33
-D/C       -> 14
-SDI(MOSI) -> 27
-SCK       -> 26
-LED       -> 25
+CS        -> 15
+RESET     -> 
+D/C       -> 2
+SDI(MOSI) -> 13
+MISO      -> 12
+SCK       -> 14
+LED       -> 21
 ```
 
-![alt text](https://github.com/johannyren/PowerDisplayESPHome/blob/main/images/Wiring_ILI9341.jpg?raw=true)
-
-
-![alt text](https://github.com/johannyren/PowerDisplayESPHome/blob/main/images/Wiring_ESP32.jpg?raw=true)
 
 ## Files required
 
@@ -73,10 +53,6 @@ The implementation also expects a Utility Meter entity in Home Assistant. The fo
 
 ## Backlight entity
 PowerDisplayESPHome creates an entity in Home Assistant that can be used to control the brightness of the display, or turn it off with a schedule etc.
-
-![alt text](https://github.com/johannyren/PowerDisplayESPHome/blob/main/images/Backlight_entity.jpg?raw=true)
-
-
 
 ## Casing
 STL files are available for 3D printing a casing for the display.
