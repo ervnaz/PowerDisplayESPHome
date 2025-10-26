@@ -1,6 +1,6 @@
 
 ###
-Adapted to work with my setyp and ESP32-2432S028R
+Changes made to work with my setup and ESP32-2432S028R
 
 
 
