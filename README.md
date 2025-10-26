@@ -1,3 +1,10 @@
+
+###
+Adapted to work with my setyp and ESP32-2432S028R
+
+
+
+
 # PowerDisplayESPHome
 
 ### UPDATE: Updated to handle the change to 15 min pricing by NordPool. 
