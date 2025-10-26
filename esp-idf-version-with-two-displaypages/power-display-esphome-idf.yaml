@@ -21,19 +21,15 @@ logger:
 # Enable Home Assistant API
 api:
   encryption:
-    key: !secret encryption_key
+
 
 ota:
-  password: !secret ota_password
+
 
 wifi:
   ssid: !secret wifi_ssid
   password: !secret wifi_password
 
-  # Enable fallback hotspot (captive portal) in case wifi connection fails
-  ap:
-    ssid: "Power-Display Fallback Hotspot"
-    password: !secret fallback_password
 
 time:
   - platform: homeassistant
@@ -141,11 +137,11 @@ color:
 image:
   - file: "solar_energy32.png"
     id: solar_power
-    type: RGB24
+    type: RGB
     #resize: 32x32
   - file: "electrical_tower32.png"
     id: grid_power
-    type: RGB24
+    type: RGB
     #resize: 32x32
 
 # Define sensors in HomeAssistant that we use for display
@@ -153,37 +149,37 @@ sensor:
   # Current import (unit is W - if you meter is using kW then it needs conversion)
   - platform: homeassistant
     id: import_el
-    entity_id: sensor.momentary_active_import
+    entity_id: sensor.smart_gateways_smart_meter_power_consumed
 
   # Current export (if having solar production or similar, otherwise comment this out)    
-  - platform: homeassistant
-    id: export_el
-    entity_id: sensor.momentary_active_export
+  #- platform: homeassistant
+  #  id: export_el
+  #  entity_id: sensor.momentary_active_export
 
   # Electricity prices from NordPool. Expecting Home Assistant NordPool Integration. https://github.com/custom-components/nordpool
   - platform: homeassistant
     id: nordpool_max  
-    entity_id: sensor.nordpool
+    entity_id: sensor.nordpool_kwh_se3_sek_3_10_025
     attribute: max
 
   # // From NordPool, but you can also use Tibber etc.
   - platform: homeassistant
     id: price_now
-    entity_id: sensor.electricity_price_langhallagatan_51b
+    entity_id: sensor.nordpool_kwh_se3_sek_3_10_025
 
   # Accumulated cost from Tibber. 
   # For example entity_id: accumulated_consumption_langhallagatan_51b
   # Else use a Utility meter template in HomeAssistant. See example below (goes into configuration.yaml in HA.)
   - platform: homeassistant
     id: consumption_today
-    entity_id: accumulated_consumption_langhallagatan_51b
+    entity_id: sensor.smart_gateways_smart_meter_total_watt_delivered
 
   # If you don´t have this sensor, comment out the following lines.
   # A calculation will then be made instead.
   # You also have to make changes below in the lambda See that section for instructions.
   - platform: homeassistant
     id: accumulated_cost_today
-    entity_id: sensor.accumulated_cost_langhallagatan_51b
+    entity_id: sensor.smart_gateways_smart_meter_total_watt_delivered_cost
 
   # Example:
   # utility_meter:
@@ -194,21 +190,22 @@ sensor:
 text_sensor:
   - platform: homeassistant   # Nordpool
     id: nordpool_today
-    entity_id: sensor.nordpool
+    entity_id: sensor.nordpool_kwh_se3_sek_3_10_025
     attribute: today
   - platform: homeassistant   # Nordpool
     id: nordpool_tomorrow
-    entity_id: sensor.nordpool
+    entity_id: sensor.nordpool_kwh_se3_sek_3_10_025
     attribute: tomorrow
 
 spi:
-  clk_pin: 26 #SCL
-  mosi_pin: 27 #SDA
+  clk_pin: 14 #SCL
+  mosi_pin: 13 #SDA
+  miso_pin: 12
 
 # Define a PWM output on the ESP32
 output:
   - platform: ledc
-    pin: 25
+    pin: 21
     id: gpio_backlight_pwm
 
 # Define a monochromatic, dimmable light for the backlight
@@ -224,9 +221,10 @@ display:
   - platform: ili9xxx
     model: TFT 2.4
     id: mydisplay
-    cs_pin: 13
-    dc_pin: 14
-    reset_pin: 33
+    cs_pin: 15
+    dc_pin: 2
+    invert_colors: False
+    color_palette: 8BIT
     transform:
       swap_xy: false
       mirror_x: false
@@ -240,8 +238,8 @@ display:
           static PowerDisplay powerDisplay;
   
           // Unit is W - if your meter is reporting kW then it needs conversion (multiply value by 1000)
-          powerDisplay.SetCurrentPower((id(import_el).state - id(export_el).state));  // Use if using solar production
-          // powerDisplay.SetCurrentPower(id(import_el).state);  // Use if not using any solar production
+          // powerDisplay.SetCurrentPower((id(import_el).state - id(export_el).state));  // Use if using solar production
+          powerDisplay.SetCurrentPower(id(import_el).state * 1000);  // Use if not using any solar production
 
           powerDisplay.SetAccumulatedCostToday(id(accumulated_cost_today).state);  // Use if you have a sensor with the accumulated cost for today from Tibber
 
@@ -249,7 +247,7 @@ display:
           powerDisplay.SetTodayMaxPrice(id(nordpool_max).state);
           powerDisplay.SetTodaysPrices(id(nordpool_today).state);
           powerDisplay.SetTomorrowsPrices(id(nordpool_tomorrow).state);
-          powerDisplay.WriteDailyEnergy(id(consumption_today).state);
+          powerDisplay.WriteDailyEnergy(id(consumption_today).state / 1000);
           powerDisplay.DisplayIcons(&it, 10, 10);
           powerDisplay.WritePowerText(&it, 120, 40);
           powerDisplay.WriteDailyAmount(&it, 120, 75, id(COLOR_CSS_WHITESMOKE));
